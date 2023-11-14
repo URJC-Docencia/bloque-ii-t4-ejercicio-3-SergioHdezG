@@ -4,6 +4,8 @@ package material.tree.binarysearchtree;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import jdk.jshell.spi.ExecutionControl;
 import material.Position;
 
 /**
@@ -11,7 +13,7 @@ import material.Position;
  * @author mayte
  */
 public class AVLTree<E> implements BinarySearchTree<E> {
-    
+
     private AVLInfo<E> checkPosition(Position<E> v) {
         if (v != null && v instanceof AVLInfo)
             return (AVLInfo<E>) v;
@@ -62,6 +64,7 @@ public class AVLTree<E> implements BinarySearchTree<E> {
         }
         
     }
+
     private class AVLTreeIterator<R> implements Iterator<Position<R>>{
         private Iterator<Position<AVLInfo<R>>> it;
         public AVLTreeIterator(Iterator<Position<AVLInfo<R>>> it){
@@ -81,21 +84,94 @@ public class AVLTree<E> implements BinarySearchTree<E> {
     }
     
     private LinkedBinarySearchTree<AVLInfo<E>> t = new LinkedBinarySearchTree<>();
+
     private Reestructurator r = new Reestructurator();
     
     @Override
     public Position<E> find(E value) {
-        throw new RuntimeException("Not implemented");
+        AVLInfo<E> nodo = new AVLInfo<>(value);
+        return this.t.find(nodo).getElement();
     }
 
     @Override
-    public Iterable<? extends Position<E>> findAll(E value) {
-        throw new RuntimeException("Not implemented");
+    public Iterable<? extends Position<E>> findAll(E value) throws ExecutionControl.InternalException {
+        throw new ExecutionControl.InternalException("An AVL Tree does not allow duplicate values.");
+    }
+
+    private void recalcularAlturaDeUnNodo(Position<AVLInfo<E>> p){
+        Iterable<? extends Position<AVLInfo<E>>> children = this.t.children(p);
+        int max = 0;
+        for (Position<AVLInfo<E>> aux : children){
+            if (aux.getElement().height > max){
+                max = aux.getElement().height;
+            }
+        }
+        p.getElement().setHeight(1+max);
+    }
+    
+    private void recalcularAltura(Position<AVLInfo<E>> p){
+        Iterable<? extends Position<AVLInfo<E>>> children = this.t.children(p);
+        int max = 0;
+        for (Position<AVLInfo<E>> aux : children){
+            if (aux.getElement().height > max){
+                max = aux.getElement().height;
+            }
+        }
+        p.getElement().setHeight(1+max);
+
+        if (!this.t.isRoot(p))
+            recalcularAltura(this.t.parent(p));
+    }
+
+    private void balance(Position<AVLInfo<E>> p){
+        Position<AVLInfo<E>> aux = p;
+        while (!this.t.isRoot(aux)){
+            aux = this.t.parent(aux);
+            int leftHeight = (this.t.hasLeft(aux)) ? this.t.left(aux).getElement().height : 0;
+            int rightHeight = (this.t.hasRight(aux)) ? this.t.right(aux).getElement().height : 0;
+            int balanceFactor = rightHeight - leftHeight;
+
+            if (Math.abs(balanceFactor) > 1){
+                Position<AVLInfo<E>> son;
+                if (balanceFactor < 0){  // Si balanceFactor < 0 me voy a buscra el hijo izquierdo
+                    son = this.t.left(p);
+                }
+                else{
+                    son = this.t.right(p);
+                }
+                leftHeight = (this.t.hasLeft(son)) ? this.t.left(son).getElement().height : 0;
+                rightHeight = (this.t.hasRight(son)) ? this.t.right(son).getElement().height : 0;
+                int sonBalanceFactor = rightHeight - leftHeight;
+
+                Position<AVLInfo<E>> grandSon;
+
+                if (sonBalanceFactor < 0){  // Si sonBalanceFactor < 0 me voy a buscra el hijo izquierdo
+                    grandSon = this.t.left(son);
+                }
+                else{
+                    grandSon = this.t.right(p);
+                }
+                Position<AVLInfo<E>> subRoot = this.r.restructure(grandSon, this.t);
+                if (this.t.hasLeft(subRoot))
+                    recalcularAlturaDeUnNodo(this.t.left(subRoot));
+                if (this.t.hasRight(subRoot))
+                    recalcularAlturaDeUnNodo(this.t.right(subRoot));
+                recalcularAltura(subRoot);
+            }
+        }
     }
 
     @Override
     public Position<E> insert(E value) {
-        throw new RuntimeException("Not implemented");
+        AVLInfo<E> nodo = new AVLInfo<>(value);
+        Position<AVLInfo<E>> p = this.t.find(nodo);
+        if (p == null) {
+            p = this.t.insert(nodo);
+            nodo.setTreePos(p);
+            recalcularAltura(p);
+            balance(p);
+        }
+        return p.getElement();
     }
 
     @Override

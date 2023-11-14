@@ -1,6 +1,7 @@
 
 package material.tree.binarysearchtree;
 
+import jdk.jshell.spi.ExecutionControl;
 import material.Position;
 import material.tree.Tree;
 
@@ -26,7 +27,7 @@ public interface BinarySearchTree<E> extends Tree<E>, Iterable<Position<E>> {
      * @param value
      * @return 
      */
-    Iterable<? extends Position<E>> findAll(E value);
+    Iterable<? extends Position<E>> findAll(E value) throws ExecutionControl.InternalException;
 
     /**
      * Inserts an entry into the tree and returns the newly created entry.
