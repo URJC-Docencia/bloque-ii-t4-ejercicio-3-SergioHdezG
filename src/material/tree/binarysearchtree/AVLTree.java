@@ -181,7 +181,24 @@ public class AVLTree<E> implements BinarySearchTree<E> {
 
     @Override
     public void remove(Position<E> pos) {
-        throw new RuntimeException("Not implemented");
+        AVLInfo<E> nodo = this.checkPosition(pos);
+        Position<AVLInfo<E>> parent = null;
+
+        if (this.hasLeft(nodo) && this.hasRight(nodo)){
+            parent = this.t.succesor(nodo.getTreePos());
+            parent = this.t.parent(parent);
+        }
+        else{
+            if (!this.t.isRoot(nodo.getTreePos())){
+                parent = this.t.parent(nodo.getTreePos());
+            }
+        }
+        
+        this.t.remove(nodo.getTreePos());
+        if (parent != null) {
+            recalcularAltura(parent);
+            balance(parent);
+        }
     }
 
     @Override
