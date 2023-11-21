@@ -90,7 +90,8 @@ public class AVLTree<E> implements BinarySearchTree<E> {
     @Override
     public Position<E> find(E value) {
         AVLInfo<E> nodo = new AVLInfo<>(value);
-        return this.t.find(nodo).getElement();
+        Position<AVLInfo<E>> pos = this.t.find(nodo);
+        return (pos == null) ? null : pos.getElement();
     }
 
     @Override
